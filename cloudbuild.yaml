@@ -3,6 +3,6 @@ steps:
   entrypoint: "golangci-lint"
   args: ["run","-v"]
 - name: "golang:1.12"
-  env: ["GO111MODULE=on"]
+  env: ["GO111MODULE=auto"]
   entrypoint: "go"
   args: ["test","-v","./..."]
