@@ -6,3 +6,5 @@ steps:
   env: ["GO111MODULE=auto"]
   entrypoint: "go"
   args: ["test","-v","./..."]
+- name: "gcr.io/cloud-builders/gcloud"
+  args: ["app","deploy"]
