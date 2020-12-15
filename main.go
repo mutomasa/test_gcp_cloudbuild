@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"io/ioutil"
+
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
 	jose "gopkg.in/square/go-jose.v2"
 )
@@ -28,7 +30,7 @@ func main() {
 		defer resp.Body.Close()
 		if err != nil {
 			w.WriteHeader(500)
-			fmt.Fprintf(w,err)
+			fmt.Fprintln(w, err)
 			return
 		}
 
@@ -36,32 +38,32 @@ func main() {
 		keyBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			w.WriteHeader(500)
-			fmt.Fprintf(w,err)
+			fmt.Fprintln(w, err)
 			return
 		}
 
-		token, err := jwt.Parse(tokenString,func(token *jwt.Token)(interface{},error){
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			//署名アルゴリズムの検証
-			if _ ,ok := token.Method.(*jwt.SigningMethodECDSA); !ok {
-				return nil,fmt.Errorf("unexpected signing method: %v",token.Header["alg"])
+			if _, ok := token.Method.(*jwt.SigningMethodECDSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
 			//JWT の情報(Claims)の取得
 			claims := token.Claims.(jwt.MapClaims)
 			//audience ,issuerの検証
 			if claims["iss"] != issuerUrl {
-				return nil,fmt.Errorf("Invalid issuer:%v",claims["iss"])
+				return nil, fmt.Errorf("Invalid issuer:%v", claims["iss"])
 			}
 
 			//audienceの検証
 			if claims["aud"] != audience {
-				return nil,fmt.Errorf("invalid auduence: %v",claims["aud"])
+				return nil, fmt.Errorf("invalid auduence: %v", claims["aud"])
 
 			}
 
 			//公開鍵をパース
 			var keySet jose.JSONWebKeySet
-			err := json.Unmarshal(keybody,&keySet)
+			err := json.Unmarshal(keyBody, &keySet)
 
 			//複数の公開鍵からトークンの"kid"に合致する公開鍵を返却
 			kid := token.Header["kid"].(string)
@@ -70,7 +72,7 @@ func main() {
 
 		if err != nil {
 			w.WriteHeader(500)
-			fmt.Fprintf(w,err)
+			fmt.Fprintln(w, err)
 			return
 		}
 
@@ -81,8 +83,8 @@ func main() {
 
 		w.WriteHeader(200)
 		//サブジェクトとメールアドレスを表示する
-		fmt.Fprinln(w,email)
-		fmt.Fprintln(w,subject)
+		fmt.Fprintln(w, email)
+		fmt.Fprintln(w, subject)
 	})
 
 	port := os.Getenv("PORT")
@@ -92,5 +94,9 @@ func main() {
 	}
 	log.Printf("Listening on port %s", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 }
