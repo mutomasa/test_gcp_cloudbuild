@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"io/ioutil"
+	jwt "gopkg.in/dgrijalva/jwt-go.v3"
+	jose "gopkg.in/square/go-jose.v2"
 )
 
 func main() {
@@ -21,7 +24,7 @@ func main() {
 		//HTTP ヘッダからJWTを取得
 		tokenString := r.Header.Get(jwtHeaderName)
 		//公開鍵を取得
-		resp, err = http.Get(jwkUrl)
+		resp, err := http.Get(jwkUrl)
 		defer resp.Body.Close()
 		if err != nil {
 			w.WriteHeader(500)
